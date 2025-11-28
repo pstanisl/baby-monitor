@@ -1,0 +1,23 @@
+[Unit]
+Description=Baby Monitor Control API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/baby-monitor
+
+# Start the control API
+ExecStart=/usr/bin/python3 /home/pi/baby-monitor/scripts/camera_control.py
+
+# Restart on failure
+Restart=always
+RestartSec=5
+
+# Resource limits
+MemoryMax=50M
+CPUQuota=20%
+
+[Install]
+WantedBy=multi-user.target

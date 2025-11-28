@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Baby Monitor</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --text-color: #eee;
+            --accent-color: #0f3460;
+            --highlight: #e94560;
+            --success: #4ecca3;
+            --warning: #ffc107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--warning);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background-color: var(--success);
+        }
+
+        .status-dot.error {
+            background-color: var(--highlight);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            background-color: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .control-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .control-card h3 {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #aaa;
+            margin-bottom: 0.25rem;
+        }
+
+        .control-card .value {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--accent-color);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--highlight);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
+
+        /* Button */
+        button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--highlight);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Info panel */
+        .info-panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .info-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #aaa;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid var(--accent-color);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #888;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: #888;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid #888;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 600px) {
+            header {
+                padding: 0.75rem;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            main {
+                padding: 0.5rem;
+            }
+
+            .control-card {
+                min-width: 150px;
+                padding: 0.75rem 1rem;
+            }
+
+            .video-container {
+                border-radius: 8px;
+            }
+        }
+
+        /* Night mode indicator */
+        .night-mode-active {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: rgba(0,0,0,0.6);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .night-mode-active.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Baby Monitor</h1>
+        <div class="status">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="video-container">
+            <video id="video" autoplay muted playsinline></video>
+            <div class="loading" id="loadingIndicator">Connecting to camera</div>
+            <div class="night-mode-active" id="nightModeIndicator">Night Mode</div>
+        </div>
+
+        <div class="controls">
+            <div class="control-card">
+                <span class="icon">🌙</span>
+                <div>
+                    <h3>Night Mode</h3>
+                    <div class="toggle-container">
+                        <label class="toggle">
+                            <input type="checkbox" id="nightModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="nightModeStatus">Off</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-card">
+                <span class="icon">📹</span>
+                <div>
+                    <h3>Stream</h3>
+                    <button id="reconnectBtn" onclick="reconnect()">Reconnect</button>
+                </div>
+            </div>
+
+            <div class="control-card">
+                <span class="icon">⚙️</span>
+                <div>
+                    <h3>Quality</h3>
+                    <select id="qualitySelect" onchange="changeQuality()">
+                        <option value="720">720p (HD)</option>
+                        <option value="480">480p (SD)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h2>Stream Info</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Resolution</span>
+                    <span id="infoResolution">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Latency</span>
+                    <span id="infoLatency">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Protocol</span>
+                    <span id="infoProtocol">WebRTC</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Connected</span>
+                    <span id="infoConnected">--</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            // MediaMTX WebRTC endpoint
+            webrtcUrl: `http://${window.location.hostname}:8889/baby-monitor/whep`,
+            // API endpoint for camera control
+            apiUrl: `http://${window.location.hostname}:5000/api`,
+            // Reconnect settings
+            reconnectDelay: 3000,
+            maxReconnectAttempts: 10
+        };
+
+        // State
+        let pc = null;
+        let reconnectAttempts = 0;
+        let connectedAt = null;
+        let nightMode = false;
+
+        // DOM Elements
+        const video = document.getElementById('video');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const nightModeToggle = document.getElementById('nightModeToggle');
+        const nightModeStatus = document.getElementById('nightModeStatus');
+        const nightModeIndicator = document.getElementById('nightModeIndicator');
+        const reconnectBtn = document.getElementById('reconnectBtn');
+
+        // Initialize WebRTC connection
+        async function connect() {
+            setStatus('connecting');
+
+            try {
+                // Create peer connection
+                pc = new RTCPeerConnection({
+                    iceServers: []  // Local network, no STUN needed
+                });
+
+                // Handle incoming tracks
+                pc.ontrack = (event) => {
+                    console.log('Track received:', event.track.kind);
+                    video.srcObject = event.streams[0];
+                    loadingIndicator.style.display = 'none';
+                    setStatus('connected');
+                    connectedAt = new Date();
+                    reconnectAttempts = 0;
+                    updateStreamInfo();
+                };
+
+                // Handle connection state changes
+                pc.onconnectionstatechange = () => {
+                    console.log('Connection state:', pc.connectionState);
+                    if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+                        setStatus('error');
+                        scheduleReconnect();
+                    }
+                };
+
+                // Add receive-only transceivers
+                pc.addTransceiver('video', { direction: 'recvonly' });
+                pc.addTransceiver('audio', { direction: 'recvonly' });
+
+                // Create and set local description
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+
+                // Wait for ICE gathering
+                await new Promise((resolve) => {
+                    if (pc.iceGatheringState === 'complete') {
+                        resolve();
+                    } else {
+                        pc.onicegatheringstatechange = () => {
+                            if (pc.iceGatheringState === 'complete') {
+                                resolve();
+                            }
+                        };
+                    }
+                });
+
+                // Send offer to MediaMTX WHEP endpoint
+                const response = await fetch(CONFIG.webrtcUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/sdp'
+                    },
+                    body: pc.localDescription.sdp
+                });
+
+                if (!response.ok) {
+                    throw new Error(`WHEP request failed: ${response.status}`);
+                }
+
+                // Set remote description
+                const answer = await response.text();
+                await pc.setRemoteDescription({
+                    type: 'answer',
+                    sdp: answer
+                });
+
+            } catch (error) {
+                console.error('Connection error:', error);
+                setStatus('error');
+                scheduleReconnect();
+            }
+        }
+
+        // Disconnect and cleanup
+        function disconnect() {
+            if (pc) {
+                pc.close();
+                pc = null;
+            }
+            video.srcObject = null;
+        }
+
+        // Reconnect
+        function reconnect() {
+            disconnect();
+            loadingIndicator.style.display = 'flex';
+            connect();
+        }
+
+        // Schedule automatic reconnect
+        function scheduleReconnect() {
+            if (reconnectAttempts >= CONFIG.maxReconnectAttempts) {
+                setStatus('error');
+                statusText.textContent = 'Connection failed';
+                return;
+            }
+
+            reconnectAttempts++;
+            statusText.textContent = `Reconnecting (${reconnectAttempts}/${CONFIG.maxReconnectAttempts})...`;
+
+            setTimeout(() => {
+                reconnect();
+            }, CONFIG.reconnectDelay);
+        }
+
+        // Update status indicator
+        function setStatus(status) {
+            statusDot.className = 'status-dot';
+
+            switch (status) {
+                case 'connecting':
+                    statusText.textContent = 'Connecting...';
+                    break;
+                case 'connected':
+                    statusDot.classList.add('connected');
+                    statusText.textContent = 'Live';
+                    break;
+                case 'error':
+                    statusDot.classList.add('error');
+                    statusText.textContent = 'Disconnected';
+                    break;
+            }
+        }
+
+        // Update stream info panel
+        function updateStreamInfo() {
+            // Resolution
+            video.onloadedmetadata = () => {
+                document.getElementById('infoResolution').textContent =
+                    `${video.videoWidth}x${video.videoHeight}`;
+            };
+
+            // Connected time
+            setInterval(() => {
+                if (connectedAt) {
+                    const seconds = Math.floor((new Date() - connectedAt) / 1000);
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    document.getElementById('infoConnected').textContent =
+                        `${mins}m ${secs}s`;
+                }
+            }, 1000);
+
+            // Latency estimation (rough)
+            document.getElementById('infoLatency').textContent = '~500ms';
+        }
+
+        // Night mode toggle
+        nightModeToggle.addEventListener('change', async (e) => {
+            nightMode = e.target.checked;
+            nightModeStatus.textContent = nightMode ? 'On' : 'Off';
+            nightModeIndicator.classList.toggle('visible', nightMode);
+
+            try {
+                const response = await fetch(`${CONFIG.apiUrl}/night-mode`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ enabled: nightMode })
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to set night mode');
+                    // Revert toggle on failure
+                    nightModeToggle.checked = !nightMode;
+                    nightModeStatus.textContent = !nightMode ? 'On' : 'Off';
+                    nightModeIndicator.classList.toggle('visible', !nightMode);
+                }
+            } catch (error) {
+                console.error('Night mode API error:', error);
+                // For now, just log - API not implemented yet
+                console.log('Night mode toggled (API not available)');
+            }
+        });
+
+        // Quality change (placeholder for future)
+        function changeQuality() {
+            const quality = document.getElementById('qualitySelect').value;
+            console.log('Quality changed to:', quality);
+            // This would require restarting the stream with different parameters
+            // Will be implemented when we add the control API
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            connect();
+
+            // Handle visibility change (reconnect when tab becomes visible)
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && (!pc || pc.connectionState === 'failed')) {
+                    reconnect();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

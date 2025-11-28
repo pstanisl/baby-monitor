@@ -1,0 +1,90 @@
+# MediaMTX Configuration for Baby Monitor
+# Documentation: https://github.com/bluenviron/mediamtx
+
+###############################################
+# General settings
+###############################################
+
+logLevel: info
+logDestinations: [stdout]
+
+###############################################
+# API settings
+###############################################
+
+api: yes
+apiAddress: :9997
+
+###############################################
+# Playback settings
+###############################################
+
+playback: no
+
+###############################################
+# RTSP server settings
+###############################################
+
+rtsp: yes
+rtspAddress: :8554
+
+###############################################
+# RTMP server settings
+###############################################
+
+rtmp: no
+
+###############################################
+# HLS server settings
+###############################################
+
+hls: yes
+hlsAddress: :8888
+hlsAlwaysRemux: no
+
+###############################################
+# WebRTC server settings
+###############################################
+
+webrtc: yes
+webrtcAddress: :8889
+webrtcEncryption: no
+webrtcICEServers2: []
+webrtcLocalUDPAddress: :8189
+
+###############################################
+# SRT server settings
+###############################################
+
+srt: no
+
+###############################################
+# Stream paths
+###############################################
+
+paths:
+  baby-monitor:
+    source: rpiCamera
+
+    # Camera resolution and framerate
+    rpiCameraWidth: 1280
+    rpiCameraHeight: 720
+    rpiCameraFPS: 30
+
+    # Video encoding (auto will use hardware h264)
+    rpiCameraCodec: auto
+    rpiCameraBitrate: 2000000
+    rpiCameraProfile: baseline
+    rpiCameraLevel: "4.1"
+
+    # Auto white balance
+    rpiCameraAWB: auto
+
+    # Autofocus (Camera Module 3 supports this)
+    rpiCameraAfMode: continuous
+
+    # Exposure
+    rpiCameraExposure: normal
+
+    # Disable recording
+    record: no

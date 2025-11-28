@@ -1,0 +1,22 @@
+[Unit]
+Description=Baby Monitor Streaming Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/baby-monitor
+
+# Start MediaMTX with our config (needs root for camera access)
+ExecStart=/usr/local/bin/mediamtx /home/pi/baby-monitor/config/mediamtx.yml
+
+# Restart on failure
+Restart=always
+RestartSec=5
+
+# Environment
+Environment=HOME=/home/pi
+
+[Install]
+WantedBy=multi-user.target
